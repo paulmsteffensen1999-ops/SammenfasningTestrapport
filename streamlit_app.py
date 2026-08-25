@@ -349,7 +349,9 @@ def generer_sammenfasning_pdf(
                     Paragraph("<b>Dato:</b> ____/____ - 20__", meta_style),
                 ],
                 [
-                    Paragraph("", meta_style),
+                    Paragraph(
+                        "<b>Godkendt af:</b> _______________________", meta_style
+                    ),
                     Paragraph("<b>Signatur:</b> _______________________", meta_style),
                 ],
             ],
