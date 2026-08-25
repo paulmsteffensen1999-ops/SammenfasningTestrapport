@@ -369,17 +369,17 @@ st.subheader("Måling over åben afbryder inden indkobling (Lagging / Mod uret)"
 col1, col2 = st.columns(2)
 with col1:
     st.header("1. Stamdata & Tolerancer")
-    station_navn = st.text_input("Stationsnavn", "Energinet NVV150kV")
-    bryder_navn = st.text_input("Afbryder ID / Feltnummer", "Q0 (Felt 12)")
-    u_nom = st.number_input("Nominel spænding (V)", value=150.0, step=1.0)
+    station_navn = st.text_input("Stationsnavn")
+    bryder_navn = st.text_input("Afbryder ID / Feltnummer")
+    u_nom = st.number_input("Nominel spænding (V)", value=None, step=1.0)
     c_tol1, c_tol2 = st.columns(2)
     with c_tol1:
         tol_vinkel = st.number_input(
-            "Tilladt vinkelafvigelse (±°)", value=10.0, step=0.5
+            "Tilladt vinkelafvigelse (±°)", value=None, step=0.5
         )
     with c_tol2:
         tol_volt = st.number_input(
-            "Tilladt spændingsafvigelse (V)", value=5.0, step=0.5
+            "Tilladt spændingsafvigelse (V)", value=None, step=0.5
         )
 
     st.header("2. Måleresultater")
@@ -396,14 +396,14 @@ with col1:
         st.markdown("### **Spændingsmålinger mellem de to sider**")
         ca1, ca2, ca3 = st.columns(3)
         with ca1:
-            u_a1 = st.number_input("L1 A mod L1 B (V)", value=0.5, key="ua1")
-            u_a2 = st.number_input("L1 A mod L2 B (V)", value=120.0, key="ua2")
+            u_a1 = st.number_input("L1 A mod L1 B (V)", value=None, key="ua1")
+            u_a2 = st.number_input("L1 A mod L2 B (V)", value=None, key="ua2")
         with ca2:
-            u_a3 = st.number_input("L2 A mod L2 B (V)", value=0.5, key="ua3")
-            u_a4 = st.number_input("L2 A mod L3 B (V)", value=120.0, key="ua4")
+            u_a3 = st.number_input("L2 A mod L2 B (V)", value=None, key="ua3")
+            u_a4 = st.number_input("L2 A mod L3 B (V)", value=None, key="ua4")
         with ca3:
-            u_a5 = st.number_input("L3 A mod L3 B (V)", value=0.5, key="ua5")
-            u_a6 = st.number_input("L3 A mod L1 B (V)", value=120.0, key="ua6")
+            u_a5 = st.number_input("L3 A mod L3 B (V)", value=None, key="ua5")
+            u_a6 = st.number_input("L3 A mod L1 B (V)", value=None, key="ua6")
         spændingsdata = [u_a1, u_a2, u_a3, u_a4, u_a5, u_a6]
         if maalingstype == "Spændingsværdier":
             v_a1, v_a2, v_a3 = 0.0, 120.0, 240.0
@@ -411,20 +411,20 @@ with col1:
             st.markdown("### **Vinkelmålinger**")
             angle_a = st.columns(3)
             with angle_a[0]:
-                v_a1 = st.number_input("L1 Vinkel (°)", value=0.0, key="va1_begge")
+                v_a1 = st.number_input("L1 Vinkel (°)", value=None, key="va1_begge")
             with angle_a[1]:
-                v_a2 = st.number_input("L2 Vinkel (°)", value=120.0, key="va2_begge")
+                v_a2 = st.number_input("L2 Vinkel (°)", value=None, key="va2_begge")
             with angle_a[2]:
-                v_a3 = st.number_input("L3 Vinkel (°)", value=240.0, key="va3_begge")
+                v_a3 = st.number_input("L3 Vinkel (°)", value=None, key="va3_begge")
     else:
         st.markdown("### **Side A (F.eks. Skinne / Reference)**")
         ca1_v, ca2_v, ca3_v = st.columns(3)
         with ca1_v:
-            v_a1 = st.number_input("L1 Vinkel (°)", value=0.0, key="va1")
+            v_a1 = st.number_input("L1 Vinkel (°)", value=None, key="va1")
         with ca2_v:
-            v_a2 = st.number_input("L2 Vinkel (°)", value=120.0, key="va2")
+            v_a2 = st.number_input("L2 Vinkel (°)", value=None, key="va2")
         with ca3_v:
-            v_a3 = st.number_input("L3 Vinkel (°)", value=240.0, key="va3")
+            v_a3 = st.number_input("L3 Vinkel (°)", value=None, key="va3")
         u_a1, u_a2, u_a3 = 0.0, 0.0, 0.0
 
     if maalingstype in ("Spændingsværdier", "Vinkel- og spændingsværdier"):
@@ -435,20 +435,20 @@ with col1:
         else:
             angle_b = st.columns(3)
             with angle_b[0]:
-                v_b1 = st.number_input("L1 Vinkel (°)", value=2.1, key="vb1_begge")
+                v_b1 = st.number_input("L1 Vinkel (°)", value=None, key="vb1_begge")
             with angle_b[1]:
-                v_b2 = st.number_input("L2 Vinkel (°)", value=121.8, key="vb2_begge")
+                v_b2 = st.number_input("L2 Vinkel (°)", value=None, key="vb2_begge")
             with angle_b[2]:
-                v_b3 = st.number_input("L3 Vinkel (°)", value=239.0, key="vb3_begge")
+                v_b3 = st.number_input("L3 Vinkel (°)", value=None, key="vb3_begge")
     else:
         st.markdown("### **Side B (F.eks. Transformer / Ny linje)**")
         cb1_v, cb2_v, cb3_v = st.columns(3)
         with cb1_v:
-            v_b1 = st.number_input("L1 Vinkel (°)", value=2.1, key="vb1")
+            v_b1 = st.number_input("L1 Vinkel (°)", value=None, key="vb1")
         with cb2_v:
-            v_b2 = st.number_input("L2 Vinkel (°)", value=121.8, key="vb2")
+            v_b2 = st.number_input("L2 Vinkel (°)", value=None, key="vb2")
         with cb3_v:
-            v_b3 = st.number_input("L3 Vinkel (°)", value=239.0, key="vb3")
+            v_b3 = st.number_input("L3 Vinkel (°)", value=None, key="vb3")
         side_b_data = [(0.0, v_b1), (0.0, v_b2), (0.0, v_b3)]
 
     if maalingstype == "Vinkelværdier":
@@ -465,31 +465,70 @@ with col1:
             "vinkler": [(0.0, v_b1), (0.0, v_b2), (0.0, v_b3)],
             "spændinger": [],
         }
-pdf_data, diagram_fig = generer_sammenfasning_pdf(
-    station_navn,
-    bryder_navn,
-    u_nom,
-    tol_vinkel,
-    tol_volt,
-    side_a_data,
-    side_b_data,
-    maalingstype,
+
+if maalingstype == "Vinkelværdier":
+    nødvendige_værdier = [
+        u_nom,
+        tol_vinkel,
+        tol_volt,
+        v_a1,
+        v_a2,
+        v_a3,
+        v_b1,
+        v_b2,
+        v_b3,
+    ]
+elif maalingstype == "Spændingsværdier":
+    nødvendige_værdier = [u_nom, tol_vinkel, tol_volt, *spændingsdata]
+else:
+    nødvendige_værdier = [
+        u_nom,
+        tol_vinkel,
+        tol_volt,
+        *spændingsdata,
+        v_a1,
+        v_a2,
+        v_a3,
+        v_b1,
+        v_b2,
+        v_b3,
+    ]
+
+alle_felter_udfyldt = bool(station_navn.strip() and bryder_navn.strip()) and all(
+    værdi is not None for værdi in nødvendige_værdier
 )
+
+if alle_felter_udfyldt:
+    pdf_data, diagram_fig = generer_sammenfasning_pdf(
+        station_navn,
+        bryder_navn,
+        u_nom,
+        tol_vinkel,
+        tol_volt,
+        side_a_data,
+        side_b_data,
+        maalingstype,
+    )
+else:
+    pdf_data, diagram_fig = None, None
 
 with col2:
     st.header("3. Live Sammenligning")
-    st.pyplot(diagram_fig)
-    st.caption(
-        "Diagram: CW-visning | Målinger: Lagging / mod uret | "
-        "Stiplet = A, fuldt optrukket = B"
-    )
-    st.header("4. Download Dokumentation")
-    st.download_button(
-        label="📥 DOWNLOAD SAMMENFASNINGSRAPPORT (PDF)",
-        data=pdf_data,
-        file_name=(
-            f"Sammenfasning_{station_navn.replace(' ', '_')}_"
-            f"{bryder_navn.replace(' ', '_')}.pdf"
-        ),
-        mime="application/pdf",
-    )
+    if alle_felter_udfyldt:
+        st.pyplot(diagram_fig)
+        st.caption(
+            "Diagram: CW-visning | Målinger: Lagging / mod uret | "
+            "Stiplet = A, fuldt optrukket = B"
+        )
+        st.header("4. Download Dokumentation")
+        st.download_button(
+            label="📥 DOWNLOAD SAMMENFASNINGSRAPPORT (PDF)",
+            data=pdf_data,
+            file_name=(
+                f"Sammenfasning_{station_navn.replace(' ', '_')}_"
+                f"{bryder_navn.replace(' ', '_')}.pdf"
+            ),
+            mime="application/pdf",
+        )
+    else:
+        st.info("Udfyld alle felter for at generere diagram og PDF-rapport.")
