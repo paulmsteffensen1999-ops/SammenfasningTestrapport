@@ -1,5 +1,6 @@
 import io
 import math
+from xml.sax.saxutils import escape
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,6 +28,8 @@ def generer_sammenfasning_pdf(
     side_a_data,
     side_b_data,
     maalingstype,
+    måle_sted_a,
+    måle_sted_b,
 ):
     fase_navne = ["L1 (Blå)", "L2 (Gul)", "L3 (Rød)"]
     spændingspunkter = [
@@ -255,9 +258,11 @@ def generer_sammenfasning_pdf(
     story = [
         Paragraph("SAMMENFASNINGS RAPPORT", title_style),
         Paragraph(
-            f"<b>Målestation:</b> {station}<br/>"
-            f"<b>Afbryder ID / Felt:</b> {bryder_id}<br/>"
-            f"<b>Målingstype:</b> {maalingstype}<br/>"
+            f"<b>Målestation:</b> {escape(str(station))}<br/>"
+            f"<b>Afbryder ID / Felt:</b> {escape(str(bryder_id))}<br/>"
+            f"<b>Målingstype:</b> {escape(str(maalingstype))}<br/>"
+            f"<b>Værdi A målt ved:</b> {escape(str(måle_sted_a))}<br/>"
+            f"<b>Værdi B målt ved:</b> {escape(str(måle_sted_b))}<br/>"
             f"<b>Tilladt tolerance:</b> "
             f"{f'±{tolerance_vinkel}°' if maalingstype == 'Vinkelværdier' else f'{tolerance_volt} V' if maalingstype == 'Spændingsværdier' else f'±{tolerance_vinkel}° / {tolerance_volt} V'}<br/>"
             f"<b>Samlet Konklusion:</b> {samlet_status_tekst}",
@@ -373,6 +378,11 @@ with col1:
     st.header("1. Stamdata & Tolerancer")
     station_navn = st.text_input("Stationsnavn")
     bryder_navn = st.text_input("Afbryder ID / Feltnummer")
+    sted_a, sted_b = st.columns(2)
+    with sted_a:
+        måle_sted_a = st.text_input("Hvor er Værdi A målt?")
+    with sted_b:
+        måle_sted_b = st.text_input("Hvor er Værdi B målt?")
     u_nom = st.number_input("Nominel spænding (V)", value=None, step=1.0)
     c_tol1, c_tol2 = st.columns(2)
     with c_tol1:
@@ -496,7 +506,12 @@ else:
         v_b3,
     ]
 
-alle_felter_udfyldt = bool(station_navn.strip() and bryder_navn.strip()) and all(
+alle_felter_udfyldt = bool(
+    station_navn.strip()
+    and bryder_navn.strip()
+    and måle_sted_a.strip()
+    and måle_sted_b.strip()
+) and all(
     værdi is not None for værdi in nødvendige_værdier
 )
 
@@ -510,6 +525,8 @@ if alle_felter_udfyldt:
         side_a_data,
         side_b_data,
         maalingstype,
+        måle_sted_a,
+        måle_sted_b,
     )
 else:
     pdf_data, diagram_fig = None, None
@@ -525,12 +542,13 @@ with col2:
         st.header("4. Download Dokumentation")
         st.download_button(
             label="📥 DOWNLOAD SAMMENFASNINGSRAPPORT (PDF)",
-            data=pdf_data,
+            data=bytes(pdf_data),
             file_name=(
                 f"Sammenfasning_{station_navn.replace(' ', '_')}_"
                 f"{bryder_navn.replace(' ', '_')}.pdf"
             ),
             mime="application/pdf",
+            on_click="ignore",
         )
     else:
         st.info("Udfyld alle felter for at generere diagram og PDF-rapport.")
