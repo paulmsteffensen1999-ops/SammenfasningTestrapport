@@ -336,21 +336,6 @@ def generer_sammenfasning_pdf(
         )
     )
     story.extend([table, Spacer(1, 20)])
-    if målepunkt_billeder:
-        story.append(Paragraph("Billeder til måleresultater", title_style))
-        for målepunkt, billeder in målepunkt_billeder.items():
-            if not billeder:
-                continue
-            story.append(Paragraph(f"<b>{escape(målepunkt)}</b>", meta_style))
-            for billede in billeder:
-                image = Image(
-                    io.BytesIO(billede.getvalue()),
-                    width=250,
-                    height=180,
-                    kind="proportional",
-                )
-                story.extend([image, Spacer(1, 8)])
-            story.append(Spacer(1, 8))
     if maalingstype in ("Vinkelværdier", "Vinkel- og spændingsværdier"):
         story.extend(
             [
@@ -387,6 +372,85 @@ def generer_sammenfasning_pdf(
             colWidths=[270, 260],
         )
     )
+    if målepunkt_billeder:
+        story.extend(
+            [
+                Spacer(1, 15),
+                Paragraph("Billeder til måleresultater", title_style),
+            ]
+        )
+        fase_nøgler = set()
+        if maalingstype in ("Vinkelværdier", "Vinkel- og spændingsværdier"):
+            for fase in range(1, 4):
+                nøgle_a = f"L{fase} A side"
+                nøgle_b = f"L{fase} B side"
+                fase_nøgler.update((nøgle_a, nøgle_b))
+                billeder_a = målepunkt_billeder.get(nøgle_a, [])
+                billeder_b = målepunkt_billeder.get(nøgle_b, [])
+                antal_rækker = max(len(billeder_a), len(billeder_b))
+                if not antal_rækker:
+                    continue
+                tabel_billeder = [
+                    [
+                        Paragraph(
+                            f"<b>L{fase} {escape(str(måle_sted_a))}</b>",
+                            cell_style,
+                        ),
+                        Paragraph(
+                            f"<b>L{fase} {escape(str(måle_sted_b))}</b>",
+                            cell_style,
+                        ),
+                    ]
+                ]
+                for indeks in range(antal_rækker):
+                    billedrække = []
+                    for billeder in (billeder_a, billeder_b):
+                        if indeks < len(billeder):
+                            billedrække.append(
+                                Image(
+                                    io.BytesIO(billeder[indeks].getvalue()),
+                                    width=245,
+                                    height=175,
+                                    kind="proportional",
+                                )
+                            )
+                        else:
+                            billedrække.append("")
+                    tabel_billeder.append(billedrække)
+                fase_tabel = Table(
+                    tabel_billeder,
+                    colWidths=[266, 266],
+                    repeatRows=1,
+                )
+                fase_tabel.setStyle(
+                    TableStyle(
+                        [
+                            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                            ("GRID", (0, 0), (-1, 0), 0.5, colors.HexColor("#BDC3C7")),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                        ]
+                    )
+                )
+                story.extend([fase_tabel, Spacer(1, 12)])
+
+        for målepunkt, billeder in målepunkt_billeder.items():
+            if målepunkt in fase_nøgler or not billeder:
+                continue
+            story.append(Paragraph(f"<b>{escape(målepunkt)}</b>", meta_style))
+            for billede in billeder:
+                story.extend(
+                    [
+                        Image(
+                            io.BytesIO(billede.getvalue()),
+                            width=250,
+                            height=180,
+                            kind="proportional",
+                        ),
+                        Spacer(1, 8),
+                    ]
+                )
+            story.append(Spacer(1, 8))
     doc.build(story)
     plt.close(fig)
     pdf_buf.seek(0)
@@ -505,43 +569,57 @@ with col1:
     st.markdown("### Billeder til måleresultater (valgfrit)")
     if maalingstype == "Vinkelværdier":
         målepunkter = [
-            f"L{fase} {side} side"
+            (
+                f"L{fase} {side} side",
+                f"L{fase} {måle_sted_a if side == 'A' else måle_sted_b}",
+            )
             for fase in range(1, 4)
             for side in ("A", "B")
         ]
     elif maalingstype == "Spændingsværdier":
         målepunkter = [
-            "L1 A mod L1 B",
-            "L1 A mod L2 B",
-            "L2 A mod L2 B",
-            "L2 A mod L3 B",
-            "L3 A mod L3 B",
-            "L3 A mod L1 B",
+            (målepunkt, målepunkt)
+            for målepunkt in [
+                "L1 A mod L1 B",
+                "L1 A mod L2 B",
+                "L2 A mod L2 B",
+                "L2 A mod L3 B",
+                "L3 A mod L3 B",
+                "L3 A mod L1 B",
+            ]
         ]
     else:
         målepunkter = [
-            "L1 A mod L1 B",
-            "L1 A mod L2 B",
-            "L2 A mod L2 B",
-            "L2 A mod L3 B",
-            "L3 A mod L3 B",
-            "L3 A mod L1 B",
             *[
-                f"L{fase} {side} side"
+                (målepunkt, målepunkt)
+                for målepunkt in [
+                    "L1 A mod L1 B",
+                    "L1 A mod L2 B",
+                    "L2 A mod L2 B",
+                    "L2 A mod L3 B",
+                    "L3 A mod L3 B",
+                    "L3 A mod L1 B",
+                ]
+            ],
+            *[
+                (
+                    f"L{fase} {side} side",
+                    f"L{fase} {måle_sted_a if side == 'A' else måle_sted_b}",
+                )
                 for fase in range(1, 4)
                 for side in ("A", "B")
             ],
         ]
     målepunkt_billeder = {}
-    for indeks, målepunkt in enumerate(målepunkter):
+    for indeks, (målepunkt_nøgle, målepunkt_label) in enumerate(målepunkter):
         billeder = st.file_uploader(
-            f"Billeder: {målepunkt}",
+            f"Billeder: {målepunkt_label}",
             type=["jpg", "jpeg", "png"],
             accept_multiple_files=True,
             key=f"målepunkt_billeder_{maalingstype}_{indeks}",
         )
         if billeder:
-            målepunkt_billeder[målepunkt] = billeder
+            målepunkt_billeder[målepunkt_nøgle] = billeder
 
 if maalingstype == "Vinkelværdier":
     nødvendige_værdier = [
