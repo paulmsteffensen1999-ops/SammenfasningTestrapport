@@ -11,6 +11,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import (
     Image,
     KeepTogether,
+    PageBreak,
     Paragraph,
     SimpleDocTemplate,
     Spacer,
@@ -27,6 +28,10 @@ MÅLEMETODER = [
     "Direkte måling på 10-20kV med isoleret testprope (kapacitiv)",
 ]
 KAPACITIV_TESTPROBE = MÅLEMETODER[-1]
+
+
+def formater_decimal(værdi):
+    return f"{værdi:.1f}".replace(".", ",")
 
 
 def generer_sammenfasning_pdf(
@@ -104,7 +109,7 @@ def generer_sammenfasning_pdf(
                     "",
                     "Samme fase" if samme_fase else "Krydsfase",
                     "",
-                    f"{round(spændingsforskel, 2)} V",
+                    f"{formater_decimal(spændingsforskel)} V",
                     status,
                 ]
             )
@@ -153,9 +158,9 @@ def generer_sammenfasning_pdf(
             data_tabel_rækker.append(
                 [
                     label,
-                    f"{v_a}°",
-                    f"{v_b}°",
-                    f"{round(vinkel_diff, 1)}°",
+                    f"{formater_decimal(v_a)}°",
+                    f"{formater_decimal(v_b)}°",
+                    f"{formater_decimal(vinkel_diff)}°",
                     "Ikke målt",
                     status,
                 ]
@@ -241,30 +246,32 @@ def generer_sammenfasning_pdf(
     title_style = ParagraphStyle(
         "T1",
         parent=styles["Heading1"],
-        fontSize=22,
+        fontSize=16,
+        leading=18,
         textColor=colors.HexColor("#2C3E50"),
-        spaceAfter=15,
+        spaceAfter=6,
     )
     meta_style = ParagraphStyle(
         "M1",
         parent=styles["Normal"],
-        fontSize=11,
-        leading=16,
+        fontSize=8,
+        leading=9,
         textColor=colors.HexColor("#34495E"),
     )
     forklaring_style = ParagraphStyle(
         "MethodExplanation",
         parent=meta_style,
-        fontSize=8,
-        leading=10,
+        fontSize=7,
+        leading=8,
     )
     cell_style = ParagraphStyle(
-        "C1", parent=styles["Normal"], fontSize=10, alignment=1
+        "C1", parent=styles["Normal"], fontSize=8, leading=9, alignment=1
     )
     cell_hdr = ParagraphStyle(
         "CH",
         parent=styles["Normal"],
-        fontSize=10,
+        fontSize=8,
+        leading=9,
         alignment=1,
         textColor=colors.white,
     )
@@ -289,7 +296,7 @@ def generer_sammenfasning_pdf(
             f"<b>Samlet Konklusion:</b> {samlet_status_tekst}",
             meta_style,
         ),
-        Spacer(1, 15),
+        Spacer(1, 6),
     ]
     if KAPACITIV_TESTPROBE in (målemetode_a, målemetode_b):
         story.extend(
@@ -367,29 +374,31 @@ def generer_sammenfasning_pdf(
                 ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BDC3C7")),
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
                 ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#ECF0F1")),
                 ("BACKGROUND", (0, 3), (-1, 3), colors.HexColor("#ECF0F1")),
             ]
         )
     )
-    story.extend([table, Spacer(1, 20)])
+    rapport_indhold = [*story, table, Spacer(1, 6)]
     if maalingstype in ("Vinkelværdier", "Vinkel- og spændingsværdier"):
-        graf_og_signatur = [
+        rapport_indhold.extend(
+            [
             Paragraph(
                 "<b>Grafisk Sammenligning</b>",
                 ParagraphStyle(
                     "Sub",
                     parent=styles["Heading2"],
-                    fontSize=13,
+                    fontSize=10,
                     textColor=colors.HexColor("#2980B9"),
                 ),
             ),
             Spacer(1, 5),
-            Image(img_buf, width=310, height=310),
-            Spacer(1, 12),
-        ]
+            Image(img_buf, width=220, height=220),
+            Spacer(1, 6),
+            ]
+        )
     signatur_tabel = Table(
         [
             [
@@ -407,15 +416,12 @@ def generer_sammenfasning_pdf(
         ],
         colWidths=[270, 260],
     )
-    if maalingstype in ("Vinkelværdier", "Vinkel- og spændingsværdier"):
-        graf_og_signatur.append(signatur_tabel)
-        story.append(KeepTogether(graf_og_signatur))
-    else:
-        story.append(signatur_tabel)
+    rapport_indhold.append(signatur_tabel)
+    story = [KeepTogether(rapport_indhold)]
     if målepunkt_billeder:
         story.extend(
             [
-                Spacer(1, 15),
+                PageBreak(),
                 Paragraph("Billeder til måleresultater", title_style),
             ]
         )
