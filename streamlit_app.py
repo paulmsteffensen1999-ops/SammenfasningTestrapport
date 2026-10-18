@@ -272,7 +272,13 @@ def generer_sammenfasning_pdf(
         Spacer(1, 15),
     ]
     if maalingstype == "Vinkelværdier":
-        tabel_headers = ["Målepunkt", "Værdi A", "Værdi B", "Vinkel Diff.", "Status"]
+        tabel_headers = [
+            "Målepunkt",
+            måle_sted_a,
+            måle_sted_b,
+            "Vinkel Diff.",
+            "Status",
+        ]
         tabel_bredder = [95, 125, 125, 85, 100]
     elif maalingstype == "Spændingsværdier":
         tabel_headers = ["Målepunkt", "Målingstype", "Spændings Diff.", "Status"]
@@ -280,15 +286,17 @@ def generer_sammenfasning_pdf(
     else:
         tabel_headers = [
             "Målepunkt",
-            "Værdi A",
-            "Værdi B",
+            måle_sted_a,
+            måle_sted_b,
             "Vinkel Diff.",
             "Spændings Diff.",
             "Status",
         ]
         tabel_bredder = [80, 105, 105, 75, 85, 80]
 
-    tabel_data = [[Paragraph(header, cell_hdr) for header in tabel_headers]]
+    tabel_data = [
+        [Paragraph(escape(str(header)), cell_hdr) for header in tabel_headers]
+    ]
     for række in data_tabel_rækker:
         status_farve = (
             "#27AE60"
@@ -496,7 +504,11 @@ with col1:
 
     st.markdown("### Billeder til måleresultater (valgfrit)")
     if maalingstype == "Vinkelværdier":
-        målepunkter = ["L1 (Blå)", "L2 (Gul)", "L3 (Rød)"]
+        målepunkter = [
+            f"L{fase} {side} side"
+            for fase in range(1, 4)
+            for side in ("A", "B")
+        ]
     elif maalingstype == "Spændingsværdier":
         målepunkter = [
             "L1 A mod L1 B",
@@ -514,9 +526,11 @@ with col1:
             "L2 A mod L3 B",
             "L3 A mod L3 B",
             "L3 A mod L1 B",
-            "L1 (Blå)",
-            "L2 (Gul)",
-            "L3 (Rød)",
+            *[
+                f"L{fase} {side} side"
+                for fase in range(1, 4)
+                for side in ("A", "B")
+            ],
         ]
     målepunkt_billeder = {}
     for indeks, målepunkt in enumerate(målepunkter):
