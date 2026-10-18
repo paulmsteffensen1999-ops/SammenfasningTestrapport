@@ -30,6 +30,7 @@ def generer_sammenfasning_pdf(
     maalingstype,
     måle_sted_a,
     måle_sted_b,
+    målepunkt_billeder=None,
 ):
     fase_navne = ["L1 (Blå)", "L2 (Gul)", "L3 (Rød)"]
     spændingspunkter = [
@@ -327,6 +328,21 @@ def generer_sammenfasning_pdf(
         )
     )
     story.extend([table, Spacer(1, 20)])
+    if målepunkt_billeder:
+        story.append(Paragraph("Billeder til måleresultater", title_style))
+        for målepunkt, billeder in målepunkt_billeder.items():
+            if not billeder:
+                continue
+            story.append(Paragraph(f"<b>{escape(målepunkt)}</b>", meta_style))
+            for billede in billeder:
+                image = Image(
+                    io.BytesIO(billede.getvalue()),
+                    width=250,
+                    height=180,
+                    kind="proportional",
+                )
+                story.extend([image, Spacer(1, 8)])
+            story.append(Spacer(1, 8))
     if maalingstype in ("Vinkelværdier", "Vinkel- og spændingsværdier"):
         story.extend(
             [
@@ -478,6 +494,41 @@ with col1:
             "spændinger": [],
         }
 
+    st.markdown("### Billeder til måleresultater (valgfrit)")
+    if maalingstype == "Vinkelværdier":
+        målepunkter = ["L1 (Blå)", "L2 (Gul)", "L3 (Rød)"]
+    elif maalingstype == "Spændingsværdier":
+        målepunkter = [
+            "L1 A mod L1 B",
+            "L1 A mod L2 B",
+            "L2 A mod L2 B",
+            "L2 A mod L3 B",
+            "L3 A mod L3 B",
+            "L3 A mod L1 B",
+        ]
+    else:
+        målepunkter = [
+            "L1 A mod L1 B",
+            "L1 A mod L2 B",
+            "L2 A mod L2 B",
+            "L2 A mod L3 B",
+            "L3 A mod L3 B",
+            "L3 A mod L1 B",
+            "L1 (Blå)",
+            "L2 (Gul)",
+            "L3 (Rød)",
+        ]
+    målepunkt_billeder = {}
+    for indeks, målepunkt in enumerate(målepunkter):
+        billeder = st.file_uploader(
+            f"Billeder: {målepunkt}",
+            type=["jpg", "jpeg", "png"],
+            accept_multiple_files=True,
+            key=f"målepunkt_billeder_{maalingstype}_{indeks}",
+        )
+        if billeder:
+            målepunkt_billeder[målepunkt] = billeder
+
 if maalingstype == "Vinkelværdier":
     nødvendige_værdier = [
         u_nom,
@@ -527,6 +578,7 @@ if alle_felter_udfyldt:
         maalingstype,
         måle_sted_a,
         måle_sted_b,
+        målepunkt_billeder,
     )
 else:
     pdf_data, diagram_fig = None, None
