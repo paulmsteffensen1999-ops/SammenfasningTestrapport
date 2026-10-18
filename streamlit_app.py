@@ -40,7 +40,8 @@ def generer_sammenfasning_pdf(
     maalingstype,
     måle_sted_a,
     måle_sted_b,
-    målemetode,
+    målemetode_a,
+    målemetode_b,
     målepunkt_billeder=None,
 ):
     fase_navne = ["L1 (Blå)", "L2 (Gul)", "L3 (Rød)"]
@@ -273,7 +274,8 @@ def generer_sammenfasning_pdf(
             f"<b>Målestation:</b> {escape(str(station))}<br/>"
             f"<b>Afbryder ID / Felt:</b> {escape(str(bryder_id))}<br/>"
             f"<b>Målingstype:</b> {escape(str(maalingstype))}<br/>"
-            f"<b>Målemetode for Værdi A &amp; B:</b> {escape(str(målemetode))}<br/>"
+            f"<b>Målemetode for Værdi A:</b> {escape(str(målemetode_a))}<br/>"
+            f"<b>Målemetode for Værdi B:</b> {escape(str(målemetode_b))}<br/>"
             f"<b>Værdi A målt ved:</b> {escape(str(måle_sted_a))}<br/>"
             f"<b>Værdi B målt ved:</b> {escape(str(måle_sted_b))}<br/>"
             f"<b>Tilladt tolerance:</b> "
@@ -283,7 +285,7 @@ def generer_sammenfasning_pdf(
         ),
         Spacer(1, 15),
     ]
-    if målemetode == KAPACITIV_TESTPROBE:
+    if KAPACITIV_TESTPROBE in (målemetode_a, målemetode_b):
         story.extend(
             [
                 Paragraph(
@@ -292,8 +294,9 @@ def generer_sammenfasning_pdf(
                     "højspændingskondensator. I kombination med måleinstrumentets "
                     "indgangsimpedans dannes et kapacitivt kredsløb, som tvinger "
                     "målesignalet (strømmen) <b>elektrisk forkant med +60°</b> i "
-                    "forhold til den reelle, rå spændingsbølge. De indtastede "
-                    "fasevinkler korrigeres derfor med −60°.",
+                    "forhold til den reelle, rå spændingsbølge. Fasevinklerne "
+                    "korrigeres derfor med −60° på den side, hvor denne "
+                    "målemetode er valgt.",
                     meta_style,
                 ),
                 Spacer(1, 10),
@@ -499,10 +502,11 @@ with col1:
         måle_sted_a = st.text_input("Hvor er Værdi A målt?")
     with sted_b:
         måle_sted_b = st.text_input("Hvor er Værdi B målt?")
-    målemetode = st.selectbox(
-        "Målemetode for Værdi A & B",
-        MÅLEMETODER,
-    )
+    metode_a, metode_b = st.columns(2)
+    with metode_a:
+        målemetode_a = st.selectbox("Målemetode for Værdi A", MÅLEMETODER)
+    with metode_b:
+        målemetode_b = st.selectbox("Målemetode for Værdi B", MÅLEMETODER)
     u_nom = st.number_input("Nominel spænding (V)", value=None, step=1.0)
     c_tol1, c_tol2 = st.columns(2)
     with c_tol1:
@@ -583,14 +587,17 @@ with col1:
             v_b3 = st.number_input("L3 Vinkel (°)", value=None, key="vb3")
         side_b_data = [(0.0, v_b1), (0.0, v_b2), (0.0, v_b3)]
 
-    if (
-        målemetode == KAPACITIV_TESTPROBE
-        and maalingstype != "Spændingsværdier"
-    ):
-        v_a1, v_a2, v_a3, v_b1, v_b2, v_b3 = [
-            None if vinkel is None else (vinkel - 60) % 360
-            for vinkel in (v_a1, v_a2, v_a3, v_b1, v_b2, v_b3)
-        ]
+    if maalingstype != "Spændingsværdier":
+        if målemetode_a == KAPACITIV_TESTPROBE:
+            v_a1, v_a2, v_a3 = [
+                None if vinkel is None else (vinkel - 60) % 360
+                for vinkel in (v_a1, v_a2, v_a3)
+            ]
+        if målemetode_b == KAPACITIV_TESTPROBE:
+            v_b1, v_b2, v_b3 = [
+                None if vinkel is None else (vinkel - 60) % 360
+                for vinkel in (v_b1, v_b2, v_b3)
+            ]
 
     if maalingstype == "Vinkelværdier":
         side_a_data = [(0.0, v_a1), (0.0, v_a2), (0.0, v_a3)]
@@ -711,7 +718,8 @@ if alle_felter_udfyldt:
         maalingstype,
         måle_sted_a,
         måle_sted_b,
-        målemetode,
+        målemetode_a,
+        målemetode_b,
         målepunkt_billeder,
     )
 else:
