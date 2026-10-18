@@ -31,7 +31,7 @@ KAPACITIV_TESTPROBE = MÅLEMETODER[-1]
 
 
 def formater_decimal(værdi):
-    return f"{værdi:.1f}".replace(".", ",")
+    return f"{værdi:.1f}"
 
 
 def generer_sammenfasning_pdf(
