@@ -252,6 +252,12 @@ def generer_sammenfasning_pdf(
         leading=16,
         textColor=colors.HexColor("#34495E"),
     )
+    forklaring_style = ParagraphStyle(
+        "MethodExplanation",
+        parent=meta_style,
+        fontSize=8,
+        leading=10,
+    )
     cell_style = ParagraphStyle(
         "C1", parent=styles["Normal"], fontSize=10, alignment=1
     )
@@ -289,7 +295,9 @@ def generer_sammenfasning_pdf(
         story.extend(
             [
                 Paragraph(
-                    "<b>Årsag til faseafvigelse på +60°:</b><br/>"
+                    "<b>Når målemetoden &#8220;Direkte måling på 10-20kV med "
+                    "isoleret testprope (kapacitiv)&#8221; bruges, skal der "
+                    "forventes en faseafvigelse på +60°:</b><br/>"
                     "Måleafvigelsen skyldes, at testspidsen fungerer som en "
                     "højspændingskondensator. I kombination med måleinstrumentets "
                     "indgangsimpedans dannes et kapacitivt kredsløb, som tvinger "
@@ -297,9 +305,9 @@ def generer_sammenfasning_pdf(
                     "forhold til den reelle, rå spændingsbølge. Fasevinklerne "
                     "korrigeres derfor med −60° på den side, hvor denne "
                     "målemetode er valgt.",
-                    meta_style,
+                    forklaring_style,
                 ),
-                Spacer(1, 10),
+                Spacer(1, 4),
             ]
         )
     if maalingstype == "Vinkelværdier":
@@ -368,41 +376,42 @@ def generer_sammenfasning_pdf(
     )
     story.extend([table, Spacer(1, 20)])
     if maalingstype in ("Vinkelværdier", "Vinkel- og spændingsværdier"):
-        story.extend(
+        graf_og_signatur = [
+            Paragraph(
+                "<b>Grafisk Sammenligning</b>",
+                ParagraphStyle(
+                    "Sub",
+                    parent=styles["Heading2"],
+                    fontSize=13,
+                    textColor=colors.HexColor("#2980B9"),
+                ),
+            ),
+            Spacer(1, 5),
+            Image(img_buf, width=310, height=310),
+            Spacer(1, 12),
+        ]
+    signatur_tabel = Table(
+        [
             [
                 Paragraph(
-                    "<b>Grafisk Sammenligning</b>",
-                    ParagraphStyle(
-                        "Sub",
-                        parent=styles["Heading2"],
-                        fontSize=13,
-                        textColor=colors.HexColor("#2980B9"),
-                    ),
+                    "<b>Test udført af:</b> _______________________", meta_style
                 ),
-                Spacer(1, 5),
-                KeepTogether([Image(img_buf, width=310, height=310)]),
-                Spacer(1, 25),
-            ]
-        )
-    story.append(
-        Table(
-            [
-                [
-                    Paragraph(
-                        "<b>Test udført af:</b> _______________________", meta_style
-                    ),
-                    Paragraph("<b>Dato:</b> ____/____ - 20__", meta_style),
-                ],
-                [
-                    Paragraph(
-                        "<b>Godkendt af:</b> _______________________", meta_style
-                    ),
-                    Paragraph("<b>Signatur:</b> _______________________", meta_style),
-                ],
+                Paragraph("<b>Dato:</b> ____/____ - 20__", meta_style),
             ],
-            colWidths=[270, 260],
-        )
+            [
+                Paragraph(
+                    "<b>Godkendt af:</b> _______________________", meta_style
+                ),
+                Paragraph("<b>Signatur:</b> _______________________", meta_style),
+            ],
+        ],
+        colWidths=[270, 260],
     )
+    if maalingstype in ("Vinkelværdier", "Vinkel- og spændingsværdier"):
+        graf_og_signatur.append(signatur_tabel)
+        story.append(KeepTogether(graf_og_signatur))
+    else:
+        story.append(signatur_tabel)
     if målepunkt_billeder:
         story.extend(
             [
