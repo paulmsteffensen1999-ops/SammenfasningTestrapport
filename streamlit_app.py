@@ -47,6 +47,8 @@ def generer_sammenfasning_pdf(
     måle_sted_b,
     målemetode_a,
     målemetode_b,
+    indtastede_vinkler_a=None,
+    indtastede_vinkler_b=None,
     målepunkt_billeder=None,
 ):
     fase_navne = ["L1 (Blå)", "L2 (Gul)", "L3 (Rød)"]
@@ -140,7 +142,7 @@ def generer_sammenfasning_pdf(
                 )
                 for i in range(3)
             ]
-        for label, u_a, u_b, v_a, v_b in sammenligninger:
+        for indeks, (label, u_a, u_b, v_a, v_b) in enumerate(sammenligninger):
 
             vinkel_diff = (v_b - v_a) % 360
             if vinkel_diff > 180:
@@ -155,11 +157,24 @@ def generer_sammenfasning_pdf(
                 status = "AFVIGELSE"
                 godkendt_samlet = False
 
+            værdi_a_tekst = f"{formater_decimal(v_a)}°"
+            værdi_b_tekst = f"{formater_decimal(v_b)}°"
+            if målemetode_a == KAPACITIV_TESTPROBE:
+                værdi_a_tekst = (
+                    f"{formater_decimal(indtastede_vinkler_a[indeks])}° → "
+                    f"{formater_decimal(v_a)}°"
+                )
+            if målemetode_b == KAPACITIV_TESTPROBE:
+                værdi_b_tekst = (
+                    f"{formater_decimal(indtastede_vinkler_b[indeks])}° → "
+                    f"{formater_decimal(v_b)}°"
+                )
+
             data_tabel_rækker.append(
                 [
                     label,
-                    f"{formater_decimal(v_a)}°",
-                    f"{formater_decimal(v_b)}°",
+                    værdi_a_tekst,
+                    værdi_b_tekst,
                     f"{formater_decimal(vinkel_diff)}°",
                     "Ikke målt",
                     status,
@@ -317,11 +332,21 @@ def generer_sammenfasning_pdf(
                 Spacer(1, 4),
             ]
         )
+    vinkel_header_a = (
+        f"{måle_sted_a} (indtastet → kompenseret)"
+        if målemetode_a == KAPACITIV_TESTPROBE
+        else måle_sted_a
+    )
+    vinkel_header_b = (
+        f"{måle_sted_b} (indtastet → kompenseret)"
+        if målemetode_b == KAPACITIV_TESTPROBE
+        else måle_sted_b
+    )
     if maalingstype == "Vinkelværdier":
         tabel_headers = [
             "Målepunkt",
-            måle_sted_a,
-            måle_sted_b,
+            vinkel_header_a,
+            vinkel_header_b,
             "Vinkel Diff.",
             "Status",
         ]
@@ -332,8 +357,8 @@ def generer_sammenfasning_pdf(
     else:
         tabel_headers = [
             "Målepunkt",
-            måle_sted_a,
-            måle_sted_b,
+            vinkel_header_a,
+            vinkel_header_b,
             "Vinkel Diff.",
             "Spændings Diff.",
             "Status",
@@ -602,7 +627,11 @@ with col1:
             v_b3 = st.number_input("L3 Vinkel (°)", value=None, key="vb3")
         side_b_data = [(0.0, v_b1), (0.0, v_b2), (0.0, v_b3)]
 
+    indtastede_vinkler_a = None
+    indtastede_vinkler_b = None
     if maalingstype != "Spændingsværdier":
+        indtastede_vinkler_a = [v_a1, v_a2, v_a3]
+        indtastede_vinkler_b = [v_b1, v_b2, v_b3]
         if målemetode_a == KAPACITIV_TESTPROBE:
             v_a1, v_a2, v_a3 = [
                 None if vinkel is None else (vinkel - 60) % 360
@@ -735,6 +764,8 @@ if alle_felter_udfyldt:
         måle_sted_b,
         målemetode_a,
         målemetode_b,
+        indtastede_vinkler_a,
+        indtastede_vinkler_b,
         målepunkt_billeder,
     )
 else:
